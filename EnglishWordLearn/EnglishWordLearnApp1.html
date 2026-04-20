@@ -1,1 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 語音記憶引擎 - 測試版</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @keyframes fadeInZoom {
+      0% { opacity: 0; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .animate-fade-in-zoom { animation: fadeInZoom 0.25s ease-out forwards; }
+    .perspective-1000 { perspective: 1000px; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <div id="root"></div>
 
+  <script type="text/babel">
+    const { useState, useCallback } = React;
+
+    const App = () => {
+      // 預設一組測試資料，方便直接測試
+      const [reviewQueue, setReviewQueue] = useState([
+        {
+          front: "Metabolism",
+          backLines: [
+            { text: "n. 新陳代謝", isExample: false },
+            { text: "Exercise can boost your metabolism.", isExample: true }
+          ],
+          exampleEng: "Exercise can boost your metabolism."
+        }
+      ]);
+      const [isFlipped, setIsFlipped] = useState(false);
+      const [isListening, setIsListening] = useState(false);
+      const [recognitionResult, setRecognitionResult] = useState("");
+
+      const speak = useCallback((text) => {
+        if (!text || !window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        window.speechSynthesis.speak(utterance);
+      }, []);
+
+      const startSpeechRecognition = useCallback(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          alert("瀏覽器不支援語音辨識");
+          return;
+        }
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.onstart = () => { setIsListening(true); setRecognitionResult(""); };
+        recognition.onresult = (e) => setRecognitionResult(e.results[0][0].transcript);
+        recognition.onend = () => setIsListening(false);
+        recognition.start();
+      }, []);
+
+      const currentCard = reviewQueue[0];
+
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-4">
+          <div className="max-w-md w-full perspective-1000">
+            <div 
+              onClick={() => !isFlipped && setIsFlipped(true)} 
+              className="bg-white rounded-3xl shadow-2xl min-h-[500px] flex flex-col overflow-hidden transition-all duration-300"
+            >
+              {!isFlipped ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-8 animate-fade-in-zoom">
+                  <h2 className="text-4xl font-bold text-slate-800 mb-4">{currentCard.front}</h2>
+                  <p className="text-slate-400 text-sm italic">點擊卡片查看答案</p>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col bg-slate-800 text-white animate-fade-in-zoom">
+                  <div className="p-6 flex-1">
+                    <img src={`https://loremflickr.com/320/200/medical`} className="w-full h-40 object-cover rounded-xl mb-6 shadow-lg" />
+                    
+                    {currentCard.backLines.map((line, i) => (
+                      <div key={i} className={`mb-4 ${line.isExample ? 'bg-slate-700/50 p-4 rounded-xl' : 'text-lg text-indigo-300 font-medium'}`}>
+                        {line.isExample ? (
+                          <div className="flex flex-col gap-3">
+                            <div className="flex items-start gap-3">
+                              <div className="flex flex-col gap-2">
+                                <button onClick={(e) => { e.stopPropagation(); speak(currentCard.exampleEng); }} className="p-2 bg-indigo-500/20 text-indigo-300 rounded-full hover:bg-indigo-500/40">
+                                  <i className="ph-fill ph-speaker-high text-xl"></i>
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); startSpeechRecognition(); }} 
+                                  className={`p-2 rounded-full transition-all ${isListening ? 'bg-red-500 animate-pulse text-white' : 'bg-green-500/20 text-green-400 hover:bg-green-500/40'}`}
+                                >
+                                  <i className="ph-fill ph-microphone text-xl"></i>
+                                </button>
+                              </div>
+                              <p className="leading-relaxed">{line.text}</p>
+                            </div>
+                            {recognitionResult && (
+                              <div className="mt-2 p-3 bg-black/30 rounded-lg border border-slate-600">
+                                <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">辨識結果：</p>
+                                <p className="text-green-400 italic font-medium">"{recognitionResult}"</p>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p>{line.text}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="p-4 bg-slate-900 flex justify-center">
+                    <button onClick={() => setIsFlipped(false)} className="px-8 py-3 bg-slate-700 rounded-xl font-bold hover:bg-slate-600">下一題 (測試中)</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <p className="mt-6 text-slate-400 text-sm">這是一個針對您需求的測試頁面</p>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
