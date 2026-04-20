@@ -1,131 +1,593 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI 語音記憶引擎 - 測試版</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    @keyframes fadeInZoom {
-      0% { opacity: 0; transform: scale(0.95); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-    .animate-fade-in-zoom { animation: fadeInZoom 0.25s ease-out forwards; }
-    .perspective-1000 { perspective: 1000px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小學英文學習樂園</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --sky: #6EC6F5;
+    --sky-dark: #3FA8E0;
+    --sun: #FFD93D;
+    --grass: #78C850;
+    --grass-dark: #4E9A3A;
+    --cloud: #ffffff;
+    --coral: #FF6B6B;
+    --purple: #A78BFA;
+    --mint: #34D399;
+    --orange: #FB923C;
+    --yellow: #FBBF24;
+    --pink: #F472B6;
+    --card-radius: 24px;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(180deg, #BFE9FF 0%, #D4F5C4 60%, #A8E6A3 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SKY & CLOUDS */
+  .sky-section {
+    position: relative;
+    background: linear-gradient(180deg, #87CEEB 0%, #B8E4F9 100%);
+    padding: 20px 0 60px;
+    overflow: hidden;
+  }
+
+  .sun {
+    position: absolute;
+    top: 20px;
+    right: 80px;
+    width: 80px;
+    height: 80px;
+    background: var(--sun);
+    border-radius: 50%;
+    box-shadow: 0 0 0 12px rgba(255,217,61,0.3), 0 0 0 24px rgba(255,217,61,0.15);
+    animation: sunPulse 3s ease-in-out infinite;
+  }
+
+  @keyframes sunPulse {
+    0%, 100% { box-shadow: 0 0 0 12px rgba(255,217,61,0.3), 0 0 0 24px rgba(255,217,61,0.15); }
+    50% { box-shadow: 0 0 0 18px rgba(255,217,61,0.25), 0 0 0 32px rgba(255,217,61,0.1); }
+  }
+
+  .cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.9;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+  }
+
+  .cloud-1 { width: 100px; height: 36px; top: 30px; left: 5%; animation: float1 6s ease-in-out infinite; }
+  .cloud-1::before { width: 50px; height: 50px; top: -24px; left: 15px; }
+  .cloud-1::after { width: 36px; height: 36px; top: -16px; left: 40px; }
+
+  .cloud-2 { width: 130px; height: 44px; top: 60px; left: 30%; animation: float2 8s ease-in-out infinite; }
+  .cloud-2::before { width: 60px; height: 60px; top: -28px; left: 20px; }
+  .cloud-2::after { width: 44px; height: 44px; top: -20px; left: 60px; }
+
+  .cloud-3 { width: 90px; height: 32px; top: 25px; left: 60%; animation: float1 7s ease-in-out infinite 2s; }
+  .cloud-3::before { width: 44px; height: 44px; top: -22px; left: 10px; }
+  .cloud-3::after { width: 32px; height: 32px; top: -14px; left: 36px; }
+
+  @keyframes float1 {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-14px); }
+  }
+
+  /* BIRDS */
+  .bird {
+    position: absolute;
+    font-size: 24px;
+    animation: flyBird 12s linear infinite;
+  }
+  .bird-1 { top: 50px; animation-delay: 0s; }
+  .bird-2 { top: 80px; animation-delay: -6s; }
+
+  @keyframes flyBird {
+    0% { left: -60px; transform: scaleX(1); }
+    100% { left: 110%; transform: scaleX(1); }
+  }
+
+  /* TITLE */
+  .hero {
+    text-align: center;
+    padding: 20px 20px 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-emoji {
+    font-size: 56px;
+    display: block;
+    animation: bounce 1.5s ease-in-out infinite;
+    margin-bottom: 8px;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .hero-title {
+    font-family: 'Baloo 2', cursive;
+    font-size: clamp(28px, 7vw, 52px);
+    font-weight: 800;
+    color: #1A4A8C;
+    text-shadow: 3px 3px 0px rgba(255,255,255,0.6);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .hero-subtitle {
+    font-size: clamp(14px, 3vw, 18px);
+    color: #2563EB;
+    font-weight: 600;
+    background: rgba(255,255,255,0.7);
+    display: inline-block;
+    padding: 6px 20px;
+    border-radius: 50px;
+    margin-bottom: 4px;
+  }
+
+  /* GRASS / GROUND */
+  .ground {
+    background: linear-gradient(180deg, #78C850 0%, #5AAF38 100%);
+    position: relative;
+    margin-top: -2px;
+  }
+
+  .ground-wave {
+    width: 100%;
+    overflow: hidden;
+    line-height: 0;
+  }
+
+  /* MAIN CONTENT */
+  .main-content {
+    background: linear-gradient(180deg, #E8F5E1 0%, #F0F9FF 100%);
+    padding: 40px 20px 60px;
+    min-height: 60vh;
+  }
+
+  .section-label {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .section-label h2 {
+    font-family: 'Baloo 2', cursive;
+    font-size: clamp(20px, 4vw, 28px);
+    font-weight: 700;
+    color: #1E40AF;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label h2 span.badge {
+    background: #DBEAFE;
+    color: #1D4ED8;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 50px;
+    font-family: 'Nunito', sans-serif;
+  }
+
+  /* CARDS GRID */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 28px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .app-card {
+    background: white;
+    border-radius: var(--card-radius);
+    padding: 32px 28px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border: 3px solid transparent;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    cursor: pointer;
+  }
+
+  .app-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 8px;
+  }
+
+  .app-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+  }
+
+  /* Card 1 - Word Learning */
+  .card-word {
+    box-shadow: 0 8px 32px rgba(59,130,246,0.15);
+    border-color: #BFDBFE;
+  }
+  .card-word::before { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
+  .card-word:hover { border-color: #3B82F6; box-shadow: 0 20px 60px rgba(59,130,246,0.25); }
+
+  .card-word .icon-wrap {
+    background: linear-gradient(135deg, #DBEAFE, #BFDBFE);
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    font-size: 48px;
+    animation: wiggle 3s ease-in-out infinite;
+  }
+
+  /* Card 2 - Speaking Test */
+  .card-speak {
+    box-shadow: 0 8px 32px rgba(167,139,250,0.15);
+    border-color: #DDD6FE;
+  }
+  .card-speak::before { background: linear-gradient(90deg, #7C3AED, #A78BFA); }
+  .card-speak:hover { border-color: #7C3AED; box-shadow: 0 20px 60px rgba(124,58,237,0.25); }
+
+  .card-speak .icon-wrap {
+    background: linear-gradient(135deg, #EDE9FE, #DDD6FE);
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    font-size: 48px;
+    animation: wiggle 3s ease-in-out infinite 1s;
+  }
+
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(-3deg) scale(1); }
+    25% { transform: rotate(3deg) scale(1.05); }
+    50% { transform: rotate(-2deg) scale(1); }
+    75% { transform: rotate(2deg) scale(1.05); }
+  }
+
+  .card-tag {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 4px 14px;
+    border-radius: 50px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  .tag-blue { background: #DBEAFE; color: #1D4ED8; }
+  .tag-purple { background: #EDE9FE; color: #6D28D9; }
+
+  .card-title {
+    font-family: 'Baloo 2', cursive;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  .card-word .card-title { color: #1D4ED8; }
+  .card-speak .card-title { color: #5B21B6; }
+
+  .card-desc {
+    font-size: 14px;
+    color: #6B7280;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    flex: 1;
+  }
+
+  .card-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .card-btn:hover { transform: scale(1.05); opacity: 0.92; }
+  .card-btn:active { transform: scale(0.97); }
+
+  .btn-blue { background: linear-gradient(135deg, #3B82F6, #2563EB); color: white; }
+  .btn-purple { background: linear-gradient(135deg, #7C3AED, #6D28D9); color: white; }
+
+  .card-stars {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 16px;
+    animation: twinkle 2s ease-in-out infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+
+  /* DECORATIVE ELEMENTS */
+  .deco-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 40px 0 16px;
+    font-size: 28px;
+    flex-wrap: wrap;
+  }
+
+  .deco-item {
+    animation: popIn 0.5s ease both;
+    cursor: default;
+    transition: transform 0.2s;
+  }
+
+  .deco-item:hover { transform: scale(1.3) rotate(10deg); }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0) rotate(-20deg); }
+    to { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+
+  .deco-item:nth-child(1) { animation-delay: 0.1s; }
+  .deco-item:nth-child(2) { animation-delay: 0.2s; }
+  .deco-item:nth-child(3) { animation-delay: 0.3s; }
+  .deco-item:nth-child(4) { animation-delay: 0.4s; }
+  .deco-item:nth-child(5) { animation-delay: 0.5s; }
+  .deco-item:nth-child(6) { animation-delay: 0.6s; }
+  .deco-item:nth-child(7) { animation-delay: 0.7s; }
+
+  /* FOOTER */
+  .footer {
+    background: linear-gradient(135deg, #1E3A8A, #1D4ED8);
+    color: rgba(255,255,255,0.85);
+    text-align: center;
+    padding: 24px 20px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .footer span { color: #93C5FD; }
+
+  /* Floating ABC letters */
+  .floating-letters {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .letter {
+    position: absolute;
+    font-family: 'Baloo 2', cursive;
+    font-weight: 800;
+    opacity: 0.08;
+    color: #1D4ED8;
+    animation: letterFloat linear infinite;
+    user-select: none;
+  }
+
+  @keyframes letterFloat {
+    0% { transform: translateY(100px) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.08; }
+    90% { opacity: 0.08; }
+    100% { transform: translateY(-200px) rotate(360deg); opacity: 0; }
+  }
+
+  /* Rainbow alphabet strip */
+  .alphabet-strip {
+    background: linear-gradient(135deg, #1D4ED8, #4338CA);
+    padding: 14px 20px;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .alpha-scroll {
+    display: inline-flex;
+    gap: 12px;
+    animation: scrollAlpha 20s linear infinite;
+    white-space: nowrap;
+  }
+
+  .alpha-char {
+    font-family: 'Baloo 2', cursive;
+    font-size: 22px;
+    font-weight: 800;
+    display: inline-block;
+    animation: colorCycle 3s ease-in-out infinite;
+  }
+
+  .alpha-char:nth-child(odd) { color: #FCD34D; }
+  .alpha-char:nth-child(3n) { color: #86EFAC; }
+  .alpha-char:nth-child(4n) { color: #FCA5A5; }
+  .alpha-char:nth-child(5n) { color: #C4B5FD; }
+
+  @keyframes scrollAlpha {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @keyframes colorCycle {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(1.2); }
+  }
+
+  /* Progress badges */
+  .badges-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 32px 0 0;
+  }
+
+  .badge-pill {
+    background: white;
+    border-radius: 50px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    font-size: 14px;
+    font-weight: 700;
+    color: #374151;
+    border: 2px solid #E5E7EB;
+    transition: transform 0.2s;
+  }
+
+  .badge-pill:hover { transform: translateY(-2px); }
+  .badge-pill .pill-icon { font-size: 18px; }
+
+</style>
 </head>
-<body class="bg-slate-50 text-slate-800">
-  <div id="root"></div>
+<body>
 
-  <script type="text/babel">
-    const { useState, useCallback } = React;
+<!-- SKY SECTION -->
+<section class="sky-section">
+  <div class="sun"></div>
 
-    const App = () => {
-      // 預設一組測試資料，方便直接測試
-      const [reviewQueue, setReviewQueue] = useState([
-        {
-          front: "Metabolism",
-          backLines: [
-            { text: "n. 新陳代謝", isExample: false },
-            { text: "Exercise can boost your metabolism.", isExample: true }
-          ],
-          exampleEng: "Exercise can boost your metabolism."
-        }
-      ]);
-      const [isFlipped, setIsFlipped] = useState(false);
-      const [isListening, setIsListening] = useState(false);
-      const [recognitionResult, setRecognitionResult] = useState("");
+  <div class="cloud cloud-1"></div>
+  <div class="cloud cloud-2"></div>
+  <div class="cloud cloud-3"></div>
 
-      const speak = useCallback((text) => {
-        if (!text || !window.speechSynthesis) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-        window.speechSynthesis.speak(utterance);
-      }, []);
+  <div class="bird bird-1">🐦</div>
+  <div class="bird bird-2">🦋</div>
 
-      const startSpeechRecognition = useCallback(() => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-          alert("瀏覽器不支援語音辨識");
-          return;
-        }
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.onstart = () => { setIsListening(true); setRecognitionResult(""); };
-        recognition.onresult = (e) => setRecognitionResult(e.results[0][0].transcript);
-        recognition.onend = () => setIsListening(false);
-        recognition.start();
-      }, []);
+  <div class="hero">
+    <span class="hero-emoji">🌟</span>
+    <h1 class="hero-title">小學英文學習樂園</h1>
+    <p class="hero-subtitle">✨ 快樂學英文，輕鬆說英語！✨</p>
+  </div>
+</section>
 
-      const currentCard = reviewQueue[0];
+<!-- ALPHABET STRIP -->
+<div class="alphabet-strip">
+  <div class="alpha-scroll">
+    <span class="alpha-char">A</span><span class="alpha-char">B</span><span class="alpha-char">C</span><span class="alpha-char">D</span><span class="alpha-char">E</span><span class="alpha-char">F</span><span class="alpha-char">G</span><span class="alpha-char">H</span><span class="alpha-char">I</span><span class="alpha-char">J</span><span class="alpha-char">K</span><span class="alpha-char">L</span><span class="alpha-char">M</span><span class="alpha-char">N</span><span class="alpha-char">O</span><span class="alpha-char">P</span><span class="alpha-char">Q</span><span class="alpha-char">R</span><span class="alpha-char">S</span><span class="alpha-char">T</span><span class="alpha-char">U</span><span class="alpha-char">V</span><span class="alpha-char">W</span><span class="alpha-char">X</span><span class="alpha-char">Y</span><span class="alpha-char">Z</span>
+    <!-- duplicate for seamless loop -->
+    <span class="alpha-char">A</span><span class="alpha-char">B</span><span class="alpha-char">C</span><span class="alpha-char">D</span><span class="alpha-char">E</span><span class="alpha-char">F</span><span class="alpha-char">G</span><span class="alpha-char">H</span><span class="alpha-char">I</span><span class="alpha-char">J</span><span class="alpha-char">K</span><span class="alpha-char">L</span><span class="alpha-char">M</span><span class="alpha-char">N</span><span class="alpha-char">O</span><span class="alpha-char">P</span><span class="alpha-char">Q</span><span class="alpha-char">R</span><span class="alpha-char">S</span><span class="alpha-char">T</span><span class="alpha-char">U</span><span class="alpha-char">V</span><span class="alpha-char">W</span><span class="alpha-char">X</span><span class="alpha-char">Y</span><span class="alpha-char">Z</span>
+  </div>
+</div>
 
-      return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4">
-          <div className="max-w-md w-full perspective-1000">
-            <div 
-              onClick={() => !isFlipped && setIsFlipped(true)} 
-              className="bg-white rounded-3xl shadow-2xl min-h-[500px] flex flex-col overflow-hidden transition-all duration-300"
-            >
-              {!isFlipped ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-8 animate-fade-in-zoom">
-                  <h2 className="text-4xl font-bold text-slate-800 mb-4">{currentCard.front}</h2>
-                  <p className="text-slate-400 text-sm italic">點擊卡片查看答案</p>
-                </div>
-              ) : (
-                <div className="flex-1 flex flex-col bg-slate-800 text-white animate-fade-in-zoom">
-                  <div className="p-6 flex-1">
-                    <img src={`https://loremflickr.com/320/200/medical`} className="w-full h-40 object-cover rounded-xl mb-6 shadow-lg" />
-                    
-                    {currentCard.backLines.map((line, i) => (
-                      <div key={i} className={`mb-4 ${line.isExample ? 'bg-slate-700/50 p-4 rounded-xl' : 'text-lg text-indigo-300 font-medium'}`}>
-                        {line.isExample ? (
-                          <div className="flex flex-col gap-3">
-                            <div className="flex items-start gap-3">
-                              <div className="flex flex-col gap-2">
-                                <button onClick={(e) => { e.stopPropagation(); speak(currentCard.exampleEng); }} className="p-2 bg-indigo-500/20 text-indigo-300 rounded-full hover:bg-indigo-500/40">
-                                  <i className="ph-fill ph-speaker-high text-xl"></i>
-                                </button>
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); startSpeechRecognition(); }} 
-                                  className={`p-2 rounded-full transition-all ${isListening ? 'bg-red-500 animate-pulse text-white' : 'bg-green-500/20 text-green-400 hover:bg-green-500/40'}`}
-                                >
-                                  <i className="ph-fill ph-microphone text-xl"></i>
-                                </button>
-                              </div>
-                              <p className="leading-relaxed">{line.text}</p>
-                            </div>
-                            {recognitionResult && (
-                              <div className="mt-2 p-3 bg-black/30 rounded-lg border border-slate-600">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">辨識結果：</p>
-                                <p className="text-green-400 italic font-medium">"{recognitionResult}"</p>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <p>{line.text}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="p-4 bg-slate-900 flex justify-center">
-                    <button onClick={() => setIsFlipped(false)} className="px-8 py-3 bg-slate-700 rounded-xl font-bold hover:bg-slate-600">下一題 (測試中)</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          <p className="mt-6 text-slate-400 text-sm">這是一個針對您需求的測試頁面</p>
-        </div>
-      );
-    };
+<!-- MAIN CONTENT -->
+<main class="main-content">
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
+  <div class="deco-row">
+    <span class="deco-item" title="蘋果">🍎</span>
+    <span class="deco-item" title="書本">📚</span>
+    <span class="deco-item" title="鉛筆">✏️</span>
+    <span class="deco-item" title="星星">⭐</span>
+    <span class="deco-item" title="火箭">🚀</span>
+    <span class="deco-item" title="彩虹">🌈</span>
+    <span class="deco-item" title="獎盃">🏆</span>
+  </div>
+
+  <div class="section-label">
+    <h2>選擇你的學習活動 <span class="badge">小一專屬</span></h2>
+  </div>
+
+  <div class="cards-grid">
+
+    <!-- Card 1: Word Learning -->
+    <a href="EnglishWordLearn/EnglishWordLearnApp1.html" class="app-card card-word">
+      <div class="card-stars">⭐✨</div>
+      <div class="icon-wrap">📖</div>
+      <span class="card-tag tag-blue">小一單字</span>
+      <h3 class="card-title">英文單字學習</h3>
+      <p class="card-desc">
+        用有趣的圖片和動畫學習小一英文單字！<br>
+        認識動物、水果、顏色、數字等主題單字，輕鬆記憶不費力！
+      </p>
+      <span class="card-btn btn-blue">
+        🚀 開始學習
+      </span>
+    </a>
+
+    <!-- Card 2: Speaking Test -->
+    <a href="EnglishSpeak/EnglishSpeakApp1.html" class="app-card card-speak">
+      <div class="card-stars">🎤💫</div>
+      <div class="icon-wrap">🎙️</div>
+      <span class="card-tag tag-purple">發音測試</span>
+      <h3 class="card-title">英文單字發音測試</h3>
+      <p class="card-desc">
+        大聲說英文，練習正確發音！<br>
+        跟著語音示範跟讀，測驗自己是否唸對，勇敢開口說英語！
+      </p>
+      <span class="card-btn btn-purple">
+        🎤 開始測試
+      </span>
+    </a>
+
+  </div>
+
+  <!-- Badges / Features -->
+  <div class="badges-row">
+    <div class="badge-pill">
+      <span class="pill-icon">🎮</span>
+      <span>遊戲化學習</span>
+    </div>
+    <div class="badge-pill">
+      <span class="pill-icon">🔊</span>
+      <span>標準發音示範</span>
+    </div>
+    <div class="badge-pill">
+      <span class="pill-icon">⭐</span>
+      <span>即時獎勵回饋</span>
+    </div>
+    <div class="badge-pill">
+      <span class="pill-icon">📱</span>
+      <span>手機平板皆適用</span>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p>🌟 小學英文學習樂園 &nbsp;|&nbsp; <span>快樂學習，天天進步！</span> 🌟</p>
+  <p style="margin-top: 6px; font-size: 12px; opacity: 0.6;">適合小學一年級學童使用</p>
+</footer>
+
 </body>
 </html>
