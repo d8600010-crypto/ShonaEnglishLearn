@@ -1,5 +1,325 @@
-import { useState, useEffect, useRef } from "react";
-import { Volume2, Upload, RotateCcw, Trophy, BarChart3, HelpCircle, X, Mic, AlertTriangle, CheckCircle2 } from "lucide-react";
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英文單字發音測試</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #eef2ff 0%, #faf5ff 100%); min-height: 100vh; }
+  .hidden { display: none; }
+
+  /* Tailwind-like utility classes */
+  .flex { display: flex; }
+  .flex-col { flex-direction: column; }
+  .items-center { align-items: center; }
+  .justify-center { justify-content: center; }
+  .justify-between { justify-content: space-between; }
+  .flex-wrap { flex-wrap: wrap; }
+  .grid { display: grid; }
+  .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .gap-1 { gap: 4px; }
+  .gap-1\.5 { gap: 6px; }
+  .gap-2 { gap: 8px; }
+  .gap-3 { gap: 12px; }
+  .gap-4 { gap: 16px; }
+  .gap-5 { gap: 20px; }
+  .w-full { width: 100%; }
+  .max-w-md { max-width: 448px; }
+  .min-h-screen { min-height: 100vh; }
+  .overflow-y-auto { overflow-y: auto; }
+  .overflow-hidden { overflow: hidden; }
+  .relative { position: relative; }
+  .absolute { position: absolute; }
+  .fixed { position: fixed; }
+  .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+  .z-50 { z-index: 50; }
+  .select-none { user-select: none; }
+  .cursor-pointer { cursor: pointer; }
+
+  /* Spacing */
+  .p-1\.5 { padding: 6px; }
+  .p-2 { padding: 8px; }
+  .p-3 { padding: 12px; }
+  .p-4 { padding: 16px; }
+  .p-5 { padding: 20px; }
+  .p-6 { padding: 24px; }
+  .p-8 { padding: 32px; }
+  .px-2 { padding-left: 8px; padding-right: 8px; }
+  .px-4 { padding-left: 16px; padding-right: 16px; }
+  .py-0\.5 { padding-top: 2px; padding-bottom: 2px; }
+  .py-1 { padding-top: 4px; padding-bottom: 4px; }
+  .py-3 { padding-top: 12px; padding-bottom: 12px; }
+  .py-3\.5 { padding-top: 14px; padding-bottom: 14px; }
+  .py-4 { padding-top: 16px; padding-bottom: 16px; }
+  .mb-1 { margin-bottom: 4px; }
+  .mb-2 { margin-bottom: 8px; }
+  .mb-3 { margin-bottom: 12px; }
+  .mb-4 { margin-bottom: 16px; }
+  .mb-5 { margin-bottom: 20px; }
+  .mt-1 { margin-top: 4px; }
+  .mt-2 { margin-top: 8px; }
+  .mt-4 { margin-top: 16px; }
+  .mt-8 { margin-top: 32px; }
+  .mt-12 { margin-top: 48px; }
+  .px-1 { padding-left: 4px; padding-right: 4px; }
+
+  /* Typography */
+  .text-xs { font-size: 12px; }
+  .text-sm { font-size: 14px; }
+  .text-base { font-size: 16px; }
+  .text-lg { font-size: 18px; }
+  .text-2xl { font-size: 24px; }
+  .text-5xl { font-size: 48px; }
+  .font-medium { font-weight: 500; }
+  .font-semibold { font-weight: 600; }
+  .font-bold { font-weight: 700; }
+  .font-black { font-weight: 900; }
+  .italic { font-style: italic; }
+  .uppercase { text-transform: uppercase; }
+  .tracking-wide { letter-spacing: 0.025em; }
+  .tracking-widest { letter-spacing: 0.1em; }
+  .leading-relaxed { line-height: 1.625; }
+  .text-center { text-align: center; }
+  .underline { text-decoration: underline; }
+  .decoration-dashed { text-decoration-style: dashed; }
+  .decoration-wavy { text-decoration-style: wavy; }
+
+  /* Colors */
+  .text-slate-300 { color: #cbd5e1; }
+  .text-slate-400 { color: #94a3b8; }
+  .text-slate-500 { color: #64748b; }
+  .text-slate-600 { color: #475569; }
+  .text-slate-700 { color: #334155; }
+  .text-slate-900 { color: #0f172a; }
+  .text-indigo-400 { color: #818cf8; }
+  .text-indigo-500 { color: #6366f1; }
+  .text-indigo-600 { color: #4f46e5; }
+  .text-rose-400 { color: #fb7185; }
+  .text-rose-500 { color: #f43f5e; }
+  .text-rose-600 { color: #e11d48; }
+  .text-amber-500 { color: #f59e0b; }
+  .text-amber-700 { color: #b45309; }
+  .text-emerald-500 { color: #10b981; }
+  .text-emerald-700 { color: #047857; }
+  .text-green-600 { color: #16a34a; }
+  .text-orange-400 { color: #fb923c; }
+  .text-white { color: #ffffff; }
+
+  .bg-white { background: #ffffff; }
+  .bg-slate-50 { background: #f8fafc; }
+  .bg-slate-800 { background: #1e293b; }
+  .bg-slate-900 { background: #0f172a; }
+  .bg-indigo-50 { background: #eef2ff; }
+  .bg-indigo-100 { background: #e0e7ff; }
+  .bg-indigo-600 { background: #4f46e5; }
+  .bg-rose-100 { background: #ffe4e6; }
+  .bg-rose-500 { background: #f43f5e; }
+  .bg-orange-400 { background: #fb923c; }
+  .bg-emerald-500 { background: #10b981; }
+  .bg-green-500 { background: #22c55e; }
+  .bg-amber-50 { background: #fffbeb; }
+  .bg-emerald-50 { background: #ecfdf5; }
+  .bg-black\/40 { background: rgba(0,0,0,0.4); }
+
+  .border { border-width: 1px; }
+  .border-slate-100 { border-color: #f1f5f9; }
+  .border-dashed { border-style: dashed; }
+  .border-indigo-200 { border-color: #c7d2fe; }
+
+  .rounded-lg { border-radius: 8px; }
+  .rounded-xl { border-radius: 12px; }
+  .rounded-2xl { border-radius: 16px; }
+  .rounded-3xl { border-radius: 24px; }
+  .rounded-full { border-radius: 9999px; }
+
+  .shadow-sm { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .shadow-lg { box-shadow: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05); }
+  .shadow-2xl { box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
+
+  .transition-colors { transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
+  .transition-all { transition: all 0.15s; }
+
+  .space-y-2 > * + * { margin-top: 8px; }
+
+  /* Active states */
+  button:active { transform: scale(0.97); }
+
+  /* Pulse animation */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .animate-pulse { animation: pulse 1.5s ease-in-out infinite; }
+
+  /* Hover states */
+  .hover\:bg-indigo-50:hover { background: #eef2ff; }
+  .hover\:bg-indigo-100:hover { background: #e0e7ff; }
+  .hover\:bg-indigo-700:hover { background: #4338ca; }
+  .hover\:bg-slate-100:hover { background: #f1f5f9; }
+  .hover\:bg-slate-800:hover { background: #1e293b; }
+  .hover\:bg-rose-600:hover { background: #e11d48; }
+  .hover\:bg-orange-500:hover { background: #f97316; }
+  .hover\:bg-emerald-600:hover { background: #059669; }
+
+  /* Flip card */
+  .flip-container { perspective: 1000px; }
+  .flip-inner {
+    transform-style: preserve-3d;
+    transition: transform 0.45s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    min-height: 520px;
+  }
+  .flip-inner.flipped { transform: rotateY(180deg); }
+  .flip-front, .flip-back {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    position: absolute;
+    inset: 0;
+  }
+  .flip-back { transform: rotateY(180deg); }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #4f46e5;
+    border-radius: 999px;
+    transition: width 0.5s ease;
+  }
+
+  /* Upload area */
+  .upload-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    margin-top: 48px;
+  }
+  .upload-icon-wrap {
+    width: 96px;
+    height: 96px;
+    background: #eef2ff;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #c7d2fe;
+    transition: background 0.2s;
+  }
+  .upload-icon-wrap:hover { background: #e0e7ff; }
+
+  /* Score badge */
+  .score-badge {
+    font-size: 11px;
+    font-weight: 900;
+    padding: 2px 8px;
+    border-radius: 8px;
+  }
+  .score-high { background: #22c55e; color: white; }
+  .score-low { background: #1e293b; color: white; }
+
+  /* Diff word colors */
+  .word-correct { color: #16a34a; font-weight: 600; }
+  .word-minor { color: #f59e0b; font-weight: 600; text-decoration: underline dashed; }
+  .word-major { color: #f43f5e; font-weight: 600; text-decoration: underline wavy; }
+
+  /* Modal overlay */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 16px;
+  }
+
+  /* Mic button */
+  .mic-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 16px;
+    font-weight: 900;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-bottom: 12px;
+  }
+  .mic-btn.ready { background: #4f46e5; color: white; }
+  .mic-btn.ready:hover { background: #4338ca; }
+  .mic-btn.listening { background: #ffe4e6; color: #f43f5e; }
+
+  li { list-style: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const UploadIcon = () => (
+  <svg width="36" height="36" fill="none" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+  </svg>
+);
+const VolumeIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+  </svg>
+);
+const MicIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+  </svg>
+);
+const HelpIcon = () => (
+  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+);
+const XIcon = () => (
+  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
+const TrophyIcon = () => (
+  <svg width="48" height="48" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <polyline points="8 21 12 17 16 21"/><line x1="12" y1="17" x2="12" y2="11"/>
+    <path d="M7 4H4a2 2 0 0 0-2 2v3a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5V6a2 2 0 0 0-2-2h-3"/>
+    <rect x="7" y="2" width="10" height="9" rx="1"/>
+  </svg>
+);
+const WarnIcon = () => (
+  <svg width="13" height="13" fill="none" stroke="#f43f5e" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+);
+const CheckIcon = () => (
+  <svg width="13" height="13" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+    <polyline points="22 4 12 14.01 9 11.01"/>
+  </svg>
+);
 
 const App = () => {
   const [originalCards, setOriginalCards] = useState([]);
@@ -10,155 +330,106 @@ const App = () => {
   const [isAutoSpeechReady, setIsAutoSpeechReady] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState("");
+  const [transcript, setTranscript] = useState('');
   const [score, setScore] = useState(null);
   const [isSemanticError, setIsSemanticError] = useState(false);
   const [diffResults, setDiffResults] = useState([]);
-  const [feedback, setFeedback] = useState("");
+  const [feedback, setFeedback] = useState('');
   const fileInputRef = useRef(null);
 
   const speak = (text) => {
     if (!text) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
+    utterance.lang = 'en-US';
     utterance.rate = 0.9;
     window.speechSynthesis.speak(utterance);
   };
 
   const calculateLevenshtein = (src, tgt) => {
-    const res = Array.from({ length: src.length + 1 }, () =>
-      Array(tgt.length + 1).fill(0)
-    );
+    const res = Array.from({ length: src.length + 1 }, () => Array(tgt.length + 1).fill(0));
     for (let i = 0; i <= src.length; i++) res[i][0] = i;
     for (let j = 0; j <= tgt.length; j++) res[0][j] = j;
-    for (let i = 1; i <= src.length; i++) {
-      for (let j = 1; j <= tgt.length; j++) {
-        if (src[i - 1] === tgt[j - 1]) res[i][j] = res[i - 1][j - 1];
-        else
-          res[i][j] =
-            Math.min(res[i - 1][j], res[i][j - 1], res[i - 1][j - 1]) + 1;
-      }
-    }
+    for (let i = 1; i <= src.length; i++)
+      for (let j = 1; j <= tgt.length; j++)
+        if (src[i-1] === tgt[j-1]) res[i][j] = res[i-1][j-1];
+        else res[i][j] = Math.min(res[i-1][j], res[i][j-1], res[i-1][j-1]) + 1;
     return res[src.length][tgt.length];
   };
 
   const computeScoreAndDiff = (originalSentence, userTranscript) => {
-    const negationWords = new Set([
-      "not","no","never","none","neither","nor","hardly","seldom",
+    const negationWords = new Set(['not','no','never','none','neither','nor','hardly','seldom',
       "don't","doesn't","didn't","can't","couldn't","won't","wouldn't",
-      "isn't","aren't","wasn't","weren't","hasn't","haven't","hadn't","shouldn't",
-    ]);
-    const clean = (text) =>
-      text
-        .toLowerCase()
-        .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "")
-        .trim()
-        .split(/\s+/);
+      "isn't","aren't","wasn't","weren't","hasn't","haven't","hadn't","shouldn't"]);
+    const clean = (text) => text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").trim().split(/\s+/);
     const targetWords = clean(originalSentence);
     const userWords = clean(userTranscript);
-
-    if (userWords.length === 0 || (userWords.length === 1 && userWords[0] === "")) {
-      setDiffResults([]);
-      setFeedback("尚未偵測到語音");
-      return 0;
+    if (userWords.length === 0 || (userWords.length === 1 && userWords[0] === '')) {
+      setDiffResults([]); setFeedback('尚未偵測到語音'); return 0;
     }
-
     const standardPenalty = 10 / targetWords.length;
-    let totalPenalty = 0;
-    let minorErrors = 0;
-    let majorErrors = 0;
-
-    const targetNegations = targetWords.filter((w) => negationWords.has(w));
-    const userNegations = userWords.filter((w) => negationWords.has(w));
-    let semanticInversion =
-      targetNegations.length !== userNegations.length ||
-      !targetNegations.every((val, index) => val === userNegations[index]);
-
-    const dp = Array.from({ length: targetWords.length + 1 }, () =>
-      Array(userWords.length + 1).fill(0)
-    );
+    let totalPenalty = 0, minorErrors = 0, majorErrors = 0;
+    const targetNeg = targetWords.filter(w => negationWords.has(w));
+    const userNeg = userWords.filter(w => negationWords.has(w));
+    let semanticInversion = targetNeg.length !== userNeg.length || !targetNeg.every((v,i) => v === userNeg[i]);
+    const dp = Array.from({ length: targetWords.length + 1 }, () => Array(userWords.length + 1).fill(0));
     for (let i = 0; i <= targetWords.length; i++) dp[i][0] = i;
     for (let j = 0; j <= userWords.length; j++) dp[0][j] = j;
-    for (let i = 1; i <= targetWords.length; i++) {
-      for (let j = 1; j <= userWords.length; j++) {
-        if (targetWords[i - 1] === userWords[j - 1]) dp[i][j] = dp[i - 1][j - 1];
-        else dp[i][j] = Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]) + 1;
-      }
-    }
-
-    let i = targetWords.length;
-    let j = userWords.length;
-    let diffs = [];
+    for (let i = 1; i <= targetWords.length; i++)
+      for (let j = 1; j <= userWords.length; j++)
+        if (targetWords[i-1] === userWords[j-1]) dp[i][j] = dp[i-1][j-1];
+        else dp[i][j] = Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]) + 1;
+    let i = targetWords.length, j = userWords.length, diffs = [];
     while (i > 0 || j > 0) {
-      if (i > 0 && j > 0 && targetWords[i - 1] === userWords[j - 1]) {
-        diffs.unshift({ word: userWords[j - 1], type: "correct" });
-        i--;
-        j--;
-      } else if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + 1) {
-        const wordDist = calculateLevenshtein(targetWords[i - 1], userWords[j - 1]);
-        const deviationRatio = wordDist / targetWords[i - 1].length;
-        if (deviationRatio <= 0.3) {
-          totalPenalty += standardPenalty * 0.5;
-          minorErrors++;
-          diffs.unshift({ word: userWords[j - 1], type: "minor" });
+      if (i > 0 && j > 0 && targetWords[i-1] === userWords[j-1]) {
+        diffs.unshift({ word: userWords[j-1], type: 'correct' }); i--; j--;
+      } else if (i > 0 && j > 0 && dp[i][j] === dp[i-1][j-1]+1) {
+        const d = calculateLevenshtein(targetWords[i-1], userWords[j-1]);
+        if (d / targetWords[i-1].length <= 0.3) {
+          totalPenalty += standardPenalty * 0.5; minorErrors++;
+          diffs.unshift({ word: userWords[j-1], type: 'minor' });
         } else {
-          totalPenalty += standardPenalty;
-          majorErrors++;
-          diffs.unshift({ word: userWords[j - 1], type: "major" });
+          totalPenalty += standardPenalty; majorErrors++;
+          diffs.unshift({ word: userWords[j-1], type: 'major' });
         }
-        i--;
-        j--;
-      } else if (i > 0 && (j === 0 || dp[i][j] === dp[i - 1][j] + 1)) {
-        totalPenalty += standardPenalty;
-        majorErrors++;
-        i--;
+        i--; j--;
+      } else if (i > 0 && (j === 0 || dp[i][j] === dp[i-1][j]+1)) {
+        totalPenalty += standardPenalty; majorErrors++; i--;
       } else {
-        totalPenalty += standardPenalty;
-        majorErrors++;
-        diffs.unshift({ word: userWords[j - 1], type: "major" });
-        j--;
+        totalPenalty += standardPenalty; majorErrors++;
+        diffs.unshift({ word: userWords[j-1], type: 'major' }); j--;
       }
     }
-
     setDiffResults(diffs);
-
     if (semanticInversion) {
-      totalPenalty += 3.5;
-      setIsSemanticError(true);
-      setFeedback("嚴重失誤：漏唸或多唸了否定詞！");
+      totalPenalty += 3.5; setIsSemanticError(true); setFeedback('嚴重失誤：漏唸或多唸了否定詞！');
     } else {
       setIsSemanticError(false);
-      const scoreValue = Math.max(0, 10 - totalPenalty);
-      if (scoreValue >= 10) setFeedback("Perfect! 發音非常清晰");
-      else if (scoreValue >= 8) setFeedback("太棒了！僅有微小偏差");
-      else if (minorErrors > 0 && majorErrors === 0) setFeedback("發音有小瑕疵");
-      else if (scoreValue >= 5) setFeedback("還行，有些唸法需調整");
-      else setFeedback("重大字彙偏離");
+      const sv = Math.max(0, 10 - totalPenalty);
+      if (sv >= 10) setFeedback('Perfect! 發音非常清晰');
+      else if (sv >= 8) setFeedback('太棒了！僅有微小偏差');
+      else if (minorErrors > 0 && majorErrors === 0) setFeedback('發音有小瑕疵');
+      else if (sv >= 5) setFeedback('還行，有些唸法需調整');
+      else setFeedback('重大字彙偏離');
     }
     return parseFloat(Math.max(0, 10 - totalPenalty).toFixed(1));
   };
 
   const startListening = (e) => {
     e.stopPropagation();
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert('您的瀏覽器不支援語音辨識，請使用 Chrome'); return; }
+    const recognition = new SR();
+    recognition.lang = 'en-US';
     recognition.interimResults = false;
-    recognition.onstart = () => {
-      setIsListening(true);
-      setTranscript("");
-      setScore(null);
-      setDiffResults([]);
-    };
+    recognition.onstart = () => { setIsListening(true); setTranscript(''); setScore(null); setDiffResults([]); };
     recognition.onresult = (event) => {
       const result = event.results[0][0].transcript;
       setTranscript(result);
-      const calculatedScore = computeScoreAndDiff(queue[0].example, result);
-      setScore(calculatedScore);
+      setScore(computeScoreAndDiff(queue[0].example, result));
     };
     recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
     recognition.start();
   };
 
@@ -174,25 +445,16 @@ const App = () => {
         if (!lines[i].trim()) continue;
         const matches = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
         if (matches) {
-          const cleanArr = matches.map((m) => m.replace(/^"|"$/g, ""));
-          parsedCards.push({
-            id: Math.random().toString(36).substr(2, 9),
-            word: cleanArr[0],
-            pos: cleanArr[1],
-            meaning: cleanArr[2],
-            variations: cleanArr[3],
-            collocations: cleanArr[4],
-            example: cleanArr[5],
-            exampleTranslation: cleanArr[6],
-          });
+          const arr = matches.map(m => m.replace(/^"|"$/g,''));
+          parsedCards.push({ id: Math.random().toString(36).substr(2,9),
+            word: arr[0], pos: arr[1], meaning: arr[2], variations: arr[3],
+            collocations: arr[4], example: arr[5], exampleTranslation: arr[6] });
         }
       }
       setOriginalCards(parsedCards);
       setQueue([...parsedCards]);
       setStats({ again: 0, hard: 0, good: 0, easy: 0 });
-      setIsFinished(false);
-      setIsFlipped(false);
-      setIsAutoSpeechReady(true);
+      setIsFinished(false); setIsFlipped(false); setIsAutoSpeechReady(true);
     };
     reader.readAsText(file);
   };
@@ -200,39 +462,32 @@ const App = () => {
   const handleSRS = (type) => {
     if (queue.length === 0) return;
     const newQueue = [...queue];
-    const currentCard = newQueue.shift();
-    setStats((prev) => ({ ...prev, [type]: prev[type] + 1 }));
-    if (type === "again") newQueue.splice(1, 0, currentCard);
-    else if (type === "hard") newQueue.splice(Math.floor(newQueue.length / 2), 0, currentCard);
-    else if (type === "good") newQueue.push(currentCard);
+    const current = newQueue.shift();
+    setStats(prev => ({ ...prev, [type]: prev[type] + 1 }));
+    if (type === 'again') newQueue.splice(1, 0, current);
+    else if (type === 'hard') newQueue.splice(Math.floor(newQueue.length / 2), 0, current);
+    else if (type === 'good') newQueue.push(current);
     if (newQueue.length === 0) setIsFinished(true);
     else {
-      setQueue(newQueue);
-      setIsFlipped(false);
-      setTranscript("");
-      setScore(null);
-      setDiffResults([]);
-      setFeedback("");
+      setQueue(newQueue); setIsFlipped(false);
+      setTranscript(''); setScore(null); setDiffResults([]); setFeedback('');
     }
   };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (isFinished || originalCards.length === 0 || showInfo || isListening) return;
-      if (e.code === "Space") {
-        e.preventDefault();
-        setIsFlipped((prev) => !prev);
-      }
+      if (e.code === 'Space') { e.preventDefault(); setIsFlipped(prev => !prev); }
       if (isFlipped) {
-        if (e.key === "1") handleSRS("again");
-        if (e.key === "2") handleSRS("hard");
-        if (e.key === "3") handleSRS("good");
-        if (e.key === "4") handleSRS("easy");
+        if (e.key === '1') handleSRS('again');
+        if (e.key === '2') handleSRS('hard');
+        if (e.key === '3') handleSRS('good');
+        if (e.key === '4') handleSRS('easy');
       }
-      if (e.key === "Enter") speak(isFlipped ? queue[0]?.example : queue[0]?.word);
+      if (e.key === 'Enter') speak(isFlipped ? queue[0]?.example : queue[0]?.word);
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [queue, isFlipped, isFinished, originalCards, showInfo, isListening]);
 
   useEffect(() => {
@@ -240,235 +495,137 @@ const App = () => {
   }, [queue[0]?.id, isFlipped]);
 
   useEffect(() => {
-    if (isFlipped && queue.length > 0 && isAutoSpeechReady && !isFinished)
-      speak(queue[0].example);
+    if (isFlipped && queue.length > 0 && isAutoSpeechReady && !isFinished) speak(queue[0].example);
   }, [isFlipped]);
 
-  const progress =
-    originalCards.length > 0
-      ? ((originalCards.length - queue.length) / originalCards.length) * 100
-      : 0;
+  const progress = originalCards.length > 0 ? ((originalCards.length - queue.length) / originalCards.length) * 100 : 0;
+  const card = queue[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex flex-col items-center justify-start p-3">
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileUpload}
-        accept=".csv"
-        className="hidden"
-      />
+    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#eef2ff,#faf5ff)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-start', padding:'12px' }}>
+      <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".csv" style={{ display:'none' }} />
 
       {/* Header */}
-      <div className="w-full max-w-md mb-3">
-        <div className="flex items-center justify-between bg-white rounded-2xl shadow-sm px-4 py-2.5 border border-slate-100">
-          <button
-            onClick={() => fileInputRef.current.click()}
-            className="flex items-center gap-1.5 text-indigo-600 hover:bg-indigo-50 rounded-xl px-2 py-1 text-sm font-semibold transition-colors"
-          >
-            <Upload size={15} />
-            上傳 CSV
+      <div style={{ width:'100%', maxWidth:'448px', marginBottom:'12px' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'white', borderRadius:'16px', boxShadow:'0 1px 3px rgba(0,0,0,0.08)', padding:'10px 16px', border:'1px solid #f1f5f9' }}>
+          <button onClick={() => fileInputRef.current.click()} style={{ display:'flex', alignItems:'center', gap:'6px', color:'#4f46e5', background:'none', border:'none', cursor:'pointer', fontWeight:700, fontSize:'14px', padding:'4px 8px', borderRadius:'10px' }}>
+            <UploadIcon /> 上傳 CSV
           </button>
-          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-            <span className="text-indigo-600 font-bold">
-              {originalCards.length - queue.length} / {originalCards.length}
-            </span>
-            <span className="text-rose-400">A:{stats.again}</span>
-            <span className="text-emerald-500">E:{stats.easy}</span>
+          <div style={{ display:'flex', alignItems:'center', gap:'10px', fontSize:'12px', fontWeight:600 }}>
+            <span style={{ color:'#4f46e5', fontWeight:700 }}>{originalCards.length - queue.length} / {originalCards.length}</span>
+            <span style={{ color:'#fb7185' }}>A:{stats.again}</span>
+            <span style={{ color:'#10b981' }}>E:{stats.easy}</span>
           </div>
-          <button
-            onClick={() => setShowInfo(true)}
-            className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-400 transition-colors"
-          >
-            <HelpCircle size={16} />
+          <button onClick={() => setShowInfo(true)} style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8', padding:'6px', borderRadius:'10px' }}>
+            <HelpIcon />
           </button>
         </div>
-
-        {/* Progress bar */}
-        <div className="mt-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+        <div className="progress-bar"><div className="progress-fill" style={{ width:`${progress}%` }} /></div>
       </div>
 
       {/* Empty state */}
       {originalCards.length === 0 && (
-        <div
-          onClick={() => fileInputRef.current.click()}
-          className="w-full max-w-md mt-12 flex flex-col items-center gap-4 cursor-pointer group"
-        >
-          <div className="w-24 h-24 bg-indigo-50 rounded-3xl flex items-center justify-center group-hover:bg-indigo-100 transition-colors border-2 border-dashed border-indigo-200">
-            <Upload size={36} className="text-indigo-300" />
-          </div>
-          <div className="text-center">
-            <p className="text-slate-700 font-bold text-lg">點擊上傳 CSV 檔案</p>
-            <p className="text-slate-400 text-sm mt-1">word, pos, meaning, variations, collocations, example, translation</p>
+        <div className="upload-area" onClick={() => fileInputRef.current.click()}>
+          <div className="upload-icon-wrap"><UploadIcon /></div>
+          <div style={{ textAlign:'center' }}>
+            <p style={{ color:'#334155', fontWeight:700, fontSize:'18px' }}>點擊上傳 CSV 檔案</p>
+            <p style={{ color:'#94a3b8', fontSize:'12px', marginTop:'6px' }}>word, pos, meaning, variations, collocations, example, translation</p>
           </div>
         </div>
       )}
 
       {/* Flashcard */}
       {!isFinished && originalCards.length > 0 && (
-        <div
-          onClick={() => setIsFlipped(!isFlipped)}
-          className="w-full max-w-md cursor-pointer select-none"
-          style={{ perspective: "1000px" }}
-        >
-          <div
-            style={{
-              transformStyle: "preserve-3d",
-              transition: "transform 0.45s cubic-bezier(0.4,0,0.2,1)",
-              transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-              position: "relative",
-              minHeight: "480px",
-            }}
-          >
+        <div style={{ width:'100%', maxWidth:'448px', cursor:'pointer', userSelect:'none', perspective:'1000px' }}
+          onClick={() => setIsFlipped(!isFlipped)}>
+          <div className={`flip-inner ${isFlipped ? 'flipped' : ''}`}>
+            
             {/* FRONT */}
-            <div
-              style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
-              className="absolute inset-0 bg-white rounded-3xl shadow-lg border border-slate-100 flex flex-col items-center justify-center p-8"
-            >
-              <div className="text-5xl font-black text-slate-900 tracking-tight text-center mb-3">
-                {queue[0]?.word}
+            <div className="flip-front" style={{ background:'white', borderRadius:'24px', boxShadow:'0 8px 24px rgba(0,0,0,0.08)', border:'1px solid #f1f5f9', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px 32px', minHeight:'520px' }}>
+              <div style={{ fontSize:'52px', fontWeight:900, color:'#0f172a', textAlign:'center', marginBottom:'16px', letterSpacing:'-1px' }}>
+                {card?.word}
               </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); speak(queue[0]?.word); }}
-                className="mt-2 p-3 bg-indigo-50 hover:bg-indigo-100 rounded-2xl text-indigo-500 transition-colors"
-              >
-                <Volume2 size={22} />
+              <button onClick={(e) => { e.stopPropagation(); speak(card?.word); }}
+                style={{ marginTop:'8px', padding:'12px', background:'#eef2ff', border:'none', borderRadius:'16px', cursor:'pointer', color:'#6366f1', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <VolumeIcon size={22} />
               </button>
-              <p className="mt-8 text-slate-300 text-sm font-medium">點擊翻面 / Space</p>
+              <p style={{ marginTop:'40px', color:'#cbd5e1', fontSize:'13px', fontWeight:500 }}>點擊翻面 / Space</p>
             </div>
 
             {/* BACK */}
-            <div
-              style={{
-                backfaceVisibility: "hidden",
-                WebkitBackfaceVisibility: "hidden",
-                transform: "rotateY(180deg)",
-              }}
-              className="absolute inset-0 bg-white rounded-3xl shadow-lg border border-slate-100 flex flex-col p-5 overflow-y-auto"
-            >
+            <div className="flip-back" style={{ background:'white', borderRadius:'24px', boxShadow:'0 8px 24px rgba(0,0,0,0.08)', border:'1px solid #f1f5f9', display:'flex', flexDirection:'column', padding:'20px', overflowY:'auto', minHeight:'520px' }}>
+              
               {/* Word + POS */}
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl font-black text-slate-900">{queue[0]?.word}</span>
-                <span className="px-2 py-0.5 bg-indigo-100 text-indigo-600 rounded-lg text-xs font-bold">
-                  {queue[0]?.pos}
-                </span>
+              <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px' }}>
+                <span style={{ fontSize:'26px', fontWeight:900, color:'#0f172a' }}>{card?.word}</span>
+                <span style={{ padding:'2px 10px', background:'#e0e7ff', color:'#4f46e5', borderRadius:'8px', fontSize:'12px', fontWeight:700 }}>{card?.pos}</span>
               </div>
 
               {/* Meaning */}
-              <p className="text-slate-700 font-semibold text-base mb-2">{queue[0]?.meaning}</p>
+              <p style={{ color:'#334155', fontWeight:600, fontSize:'15px', marginBottom:'10px' }}>{card?.meaning}</p>
 
               {/* Variations & Collocations */}
-              <div className="flex flex-wrap gap-2 mb-3 text-xs">
-                {queue[0]?.variations && (
-                  <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg font-medium">
-                    V: {queue[0].variations}
-                  </span>
-                )}
-                {queue[0]?.collocations && (
-                  <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-lg font-medium">
-                    C: {queue[0].collocations}
-                  </span>
-                )}
+              <div style={{ display:'flex', flexWrap:'wrap', gap:'6px', marginBottom:'12px' }}>
+                {card?.variations && <span style={{ background:'#fffbeb', color:'#b45309', padding:'2px 10px', borderRadius:'8px', fontSize:'12px', fontWeight:600 }}>V: {card.variations}</span>}
+                {card?.collocations && <span style={{ background:'#ecfdf5', color:'#047857', padding:'2px 10px', borderRadius:'8px', fontSize:'12px', fontWeight:600 }}>C: {card.collocations}</span>}
               </div>
 
-              {/* Example sentence */}
-              <div className="bg-indigo-50 rounded-2xl p-3 mb-3">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-indigo-400 uppercase tracking-wide">Example</span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); speak(queue[0]?.example); }}
-                    className="p-1.5 bg-white text-indigo-500 rounded-xl shadow-sm hover:bg-indigo-100 transition-colors"
-                  >
-                    <Volume2 size={14} />
+              {/* Example */}
+              <div style={{ background:'#eef2ff', borderRadius:'16px', padding:'12px', marginBottom:'10px' }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'6px' }}>
+                  <span style={{ fontSize:'11px', fontWeight:700, color:'#818cf8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Example</span>
+                  <button onClick={(e) => { e.stopPropagation(); speak(card?.example); }}
+                    style={{ padding:'6px', background:'white', border:'none', borderRadius:'10px', cursor:'pointer', color:'#6366f1', boxShadow:'0 1px 2px rgba(0,0,0,0.05)', display:'flex' }}>
+                    <VolumeIcon size={14} />
                   </button>
                 </div>
-                <p className="text-slate-700 font-semibold text-sm leading-relaxed italic">
-                  "{queue[0]?.example}"
-                </p>
+                <p style={{ color:'#334155', fontWeight:600, fontSize:'13px', lineHeight:1.6, fontStyle:'italic' }}>"{card?.example}"</p>
               </div>
 
-              {/* Speech recognition result */}
+              {/* Results or Translation */}
               {transcript ? (
-                <div className="bg-slate-50 rounded-2xl p-3 mb-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Results</span>
+                <div style={{ background:'#f8fafc', borderRadius:'14px', padding:'12px', marginBottom:'10px' }}>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'8px' }}>
+                    <span style={{ fontSize:'11px', fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Results</span>
                     {score !== null && (
-                      <span
-                        className={`text-xs font-black px-2 py-0.5 rounded-lg ${
-                          score >= 8 ? "bg-green-500 text-white" : "bg-slate-800 text-white"
-                        }`}
-                      >
-                        {score} PTS
-                      </span>
+                      <span className={`score-badge ${score >= 8 ? 'score-high' : 'score-low'}`}>{score} PTS</span>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-1 mb-2">
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:'4px', marginBottom:'8px' }}>
                     {diffResults.map((item, idx) => (
-                      <span
-                        key={idx}
-                        className={`text-sm font-semibold ${
-                          item.type === "correct"
-                            ? "text-green-600"
-                            : item.type === "minor"
-                            ? "text-amber-500 underline decoration-dashed"
-                            : "text-rose-500 underline decoration-wavy"
-                        }`}
-                      >
-                        {item.word}
-                      </span>
+                      <span key={idx} className={`word-${item.type}`}>{item.word}</span>
                     ))}
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    {isSemanticError ? (
-                      <AlertTriangle size={13} className="text-rose-500" />
-                    ) : (
-                      <CheckCircle2 size={13} className="text-emerald-500" />
-                    )}
-                    <span className={isSemanticError ? "text-rose-500 font-bold" : "text-slate-500"}>
-                      {feedback}
-                    </span>
+                  <div style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'12px' }}>
+                    {isSemanticError ? <WarnIcon /> : <CheckIcon />}
+                    <span style={{ color: isSemanticError ? '#f43f5e' : '#64748b', fontWeight: isSemanticError ? 700 : 400 }}>{feedback}</span>
                   </div>
                 </div>
               ) : (
-                <p className="text-slate-400 text-xs italic mb-3 px-1">
-                  {queue[0]?.exampleTranslation}
-                </p>
+                <p style={{ color:'#94a3b8', fontSize:'12px', fontStyle:'italic', marginBottom:'10px', padding:'0 4px' }}>{card?.exampleTranslation}</p>
               )}
 
               {/* Mic button */}
-              <button
-                onClick={startListening}
-                disabled={isListening}
-                className={`w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all active:scale-95 mb-3 ${
-                  isListening
-                    ? "bg-rose-100 text-rose-500 animate-pulse"
-                    : "bg-indigo-600 text-white hover:bg-indigo-700"
-                }`}
-              >
-                <Mic size={16} />
-                {isListening ? "聆聽中…" : "開始發音測試"}
+              <button onClick={startListening} disabled={isListening}
+                className={`mic-btn ${isListening ? 'listening animate-pulse' : 'ready'}`}>
+                <MicIcon size={16} />
+                {isListening ? '聆聽中…' : '開始發音測試'}
               </button>
 
               {/* SRS buttons */}
-              <div className="grid grid-cols-4 gap-2">
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'8px' }}>
                 {[
-                  { type: "again", label: "再來", color: "bg-rose-500 hover:bg-rose-600" },
-                  { type: "hard", label: "困難", color: "bg-orange-400 hover:bg-orange-500" },
-                  { type: "good", label: "好的", color: "bg-emerald-500 hover:bg-emerald-600" },
-                  { type: "easy", label: "簡單", color: "bg-indigo-600 hover:bg-indigo-700" },
-                ].map((btn) => (
-                  <button
-                    key={btn.type}
+                  { type:'again', label:'再來', bg:'#f43f5e', hover:'#e11d48' },
+                  { type:'hard',  label:'困難', bg:'#fb923c', hover:'#f97316' },
+                  { type:'good',  label:'好的', bg:'#10b981', hover:'#059669' },
+                  { type:'easy',  label:'簡單', bg:'#4f46e5', hover:'#4338ca' },
+                ].map(btn => (
+                  <button key={btn.type}
                     onClick={(e) => { e.stopPropagation(); handleSRS(btn.type); }}
-                    className={`py-3 rounded-xl font-black text-[11px] text-white uppercase tracking-widest transition-all active:scale-95 shadow-sm ${btn.color}`}
-                  >
-                    {btn.label}
-                  </button>
+                    style={{ padding:'12px 4px', borderRadius:'12px', fontWeight:900, fontSize:'11px', color:'white', textTransform:'uppercase', letterSpacing:'0.08em', background:btn.bg, border:'none', cursor:'pointer', transition:'all 0.15s', boxShadow:'0 2px 4px rgba(0,0,0,0.1)' }}
+                    onMouseEnter={e => e.target.style.background = btn.hover}
+                    onMouseLeave={e => e.target.style.background = btn.bg}
+                  >{btn.label}</button>
                 ))}
               </div>
             </div>
@@ -478,26 +635,24 @@ const App = () => {
 
       {/* Finished screen */}
       {isFinished && (
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-lg border border-slate-100 p-8 flex flex-col items-center gap-5 mt-4">
-          <Trophy size={48} className="text-amber-400" />
-          <h2 className="text-2xl font-black text-slate-900">練習完成！</h2>
-          <div className="grid grid-cols-2 gap-3 w-full text-sm">
+        <div style={{ width:'100%', maxWidth:'448px', background:'white', borderRadius:'24px', boxShadow:'0 8px 24px rgba(0,0,0,0.08)', border:'1px solid #f1f5f9', padding:'40px 32px', display:'flex', flexDirection:'column', alignItems:'center', gap:'20px', marginTop:'16px' }}>
+          <TrophyIcon />
+          <h2 style={{ fontSize:'24px', fontWeight:900, color:'#0f172a' }}>練習完成！</h2>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'12px', width:'100%' }}>
             {[
-              { label: "Again", value: stats.again, color: "text-rose-500" },
-              { label: "Hard", value: stats.hard, color: "text-orange-400" },
-              { label: "Good", value: stats.good, color: "text-emerald-500" },
-              { label: "Easy", value: stats.easy, color: "text-indigo-600" },
-            ].map((s) => (
-              <div key={s.label} className="bg-slate-50 rounded-2xl p-3 text-center">
-                <p className="text-slate-400 text-xs font-semibold">{s.label}</p>
-                <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+              { label:'Again', value:stats.again, color:'#f43f5e' },
+              { label:'Hard',  value:stats.hard,  color:'#fb923c' },
+              { label:'Good',  value:stats.good,  color:'#10b981' },
+              { label:'Easy',  value:stats.easy,  color:'#4f46e5' },
+            ].map(s => (
+              <div key={s.label} style={{ background:'#f8fafc', borderRadius:'16px', padding:'16px', textAlign:'center' }}>
+                <p style={{ color:'#94a3b8', fontSize:'12px', fontWeight:600 }}>{s.label}</p>
+                <p style={{ color:s.color, fontSize:'28px', fontWeight:900 }}>{s.value}</p>
               </div>
             ))}
           </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-slate-800 transition-colors"
-          >
+          <button onClick={() => window.location.reload()}
+            style={{ width:'100%', padding:'16px', background:'#0f172a', color:'white', border:'none', borderRadius:'16px', fontWeight:900, fontSize:'15px', cursor:'pointer' }}>
             重新開始
           </button>
         </div>
@@ -505,43 +660,25 @@ const App = () => {
 
       {/* Info modal */}
       {showInfo && (
-        <div
-          onClick={() => setShowInfo(false)}
-          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-black text-slate-900">評分指南</h3>
-              <button onClick={() => setShowInfo(false)} className="p-1.5 hover:bg-slate-100 rounded-xl">
-                <X size={18} className="text-slate-400" />
-              </button>
+        <div className="modal-overlay" onClick={() => setShowInfo(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'white', borderRadius:'24px', boxShadow:'0 25px 50px rgba(0,0,0,0.25)', padding:'24px', maxWidth:'360px', width:'100%' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px' }}>
+              <h3 style={{ fontSize:'18px', fontWeight:900, color:'#0f172a' }}>評分指南</h3>
+              <button onClick={() => setShowInfo(false)} style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8', padding:'6px', borderRadius:'10px', display:'flex' }}><XIcon /></button>
             </div>
-            <ul className="space-y-2 text-sm text-slate-600 leading-relaxed mb-5">
-              <li>
-                <span className="text-green-600 font-bold">綠字</span>：發音準確。
-              </li>
-              <li>
-                <span className="text-amber-500 font-bold">橘字虛線</span>：發音輕微瑕疵。
-              </li>
-              <li>
-                <span className="text-rose-500 font-bold">紅字波浪線</span>：發音偏差或多唸。
-              </li>
-              <li>
-                <span className="text-rose-600 font-bold">語意反轉</span>：否定詞漏唸，扣 3.5 分。
-              </li>
+            <ul style={{ display:'flex', flexDirection:'column', gap:'8px', fontSize:'14px', color:'#475569', lineHeight:1.6, marginBottom:'16px' }}>
+              <li><span style={{ color:'#16a34a', fontWeight:700 }}>綠字</span>：發音準確。</li>
+              <li><span style={{ color:'#f59e0b', fontWeight:700 }}>橘字虛線</span>：發音輕微瑕疵。</li>
+              <li><span style={{ color:'#f43f5e', fontWeight:700 }}>紅字波浪線</span>：發音偏差或多唸。</li>
+              <li><span style={{ color:'#e11d48', fontWeight:700 }}>語意反轉</span>：否定詞漏唸，扣 3.5 分。</li>
             </ul>
-            <div className="text-xs text-slate-400 bg-slate-50 rounded-xl p-3 mb-4">
-              <p className="font-bold mb-1">鍵盤快捷鍵</p>
+            <div style={{ fontSize:'12px', color:'#94a3b8', background:'#f8fafc', borderRadius:'12px', padding:'12px', marginBottom:'16px' }}>
+              <p style={{ fontWeight:700, marginBottom:'4px' }}>鍵盤快捷鍵</p>
               <p>Space — 翻面　Enter — 朗讀</p>
               <p>1/2/3/4 — Again / Hard / Good / Easy</p>
             </div>
-            <button
-              onClick={() => setShowInfo(false)}
-              className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-sm hover:bg-slate-800 transition-colors"
-            >
+            <button onClick={() => setShowInfo(false)}
+              style={{ width:'100%', padding:'12px', background:'#0f172a', color:'white', border:'none', borderRadius:'12px', fontWeight:900, fontSize:'14px', cursor:'pointer' }}>
               我明白了
             </button>
           </div>
@@ -551,4 +688,7 @@ const App = () => {
   );
 };
 
-export default App;
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
