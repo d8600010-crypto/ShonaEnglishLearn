@@ -1,131 +1,241 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI 語音記憶引擎 - 測試版</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    @keyframes fadeInZoom {
-      0% { opacity: 0; transform: scale(0.95); }
-      100% { opacity: 1; transform: scale(1); }
+import React, { useState, useEffect, useRef } from 'react';
+import { Volume2, Upload, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
+
+const App = () => {
+  const [cards, setCards] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [isAutoSpeechReady, setIsAutoSpeechReady] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // 朗讀功能
+  const speak = (text) => {
+    if (!text) return;
+    window.speechSynthesis.cancel(); // 停止當前朗讀
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // 處理 CSV 解析
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const lines = text.split(/\r?\n/);
+      const parsedCards = [];
+
+      // 跳過標題列
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        
+        // 簡單的 CSV 解析（處理引號）
+        const matches = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+        if (matches) {
+          const clean = matches.map(m => m.replace(/^"|"$/g, ''));
+          parsedCards.push({
+            word: clean[0],
+            pos: clean[1],
+            meaning: clean[2],
+            variations: clean[3],
+            collocations: clean[4],
+            example: clean[5],
+            exampleTranslation: clean[6]
+          });
+        }
+      }
+      setCards(parsedCards);
+      setCurrentIndex(0);
+      setIsFlipped(false);
+      setIsAutoSpeechReady(true);
+    };
+    reader.readAsText(file);
+  };
+
+  // 當切換到正面或背面時自動朗讀
+  useEffect(() => {
+    if (cards.length > 0 && isAutoSpeechReady) {
+      if (!isFlipped) {
+        speak(cards[currentIndex].word);
+      } else {
+        speak(cards[currentIndex].example);
+      }
     }
-    .animate-fade-in-zoom { animation: fadeInZoom 0.25s ease-out forwards; }
-    .perspective-1000 { perspective: 1000px; }
-  </style>
-</head>
-<body class="bg-slate-50 text-slate-800">
-  <div id="root"></div>
+  }, [currentIndex, isFlipped, cards, isAutoSpeechReady]);
 
-  <script type="text/babel">
-    const { useState, useCallback } = React;
-
-    const App = () => {
-      // 預設一組測試資料，方便直接測試
-      const [reviewQueue, setReviewQueue] = useState([
-        {
-          front: "Metabolism",
-          backLines: [
-            { text: "n. 新陳代謝", isExample: false },
-            { text: "Exercise can boost your metabolism.", isExample: true }
-          ],
-          exampleEng: "Exercise can boost your metabolism."
+  // 鍵盤監聽 (Enter 鍵朗讀)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter' && cards.length > 0) {
+        if (!isFlipped) {
+          speak(cards[currentIndex].word);
+        } else {
+          speak(cards[currentIndex].example);
         }
-      ]);
-      const [isFlipped, setIsFlipped] = useState(false);
-      const [isListening, setIsListening] = useState(false);
-      const [recognitionResult, setRecognitionResult] = useState("");
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentIndex, isFlipped, cards]);
 
-      const speak = useCallback((text) => {
-        if (!text || !window.speechSynthesis) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-        window.speechSynthesis.speak(utterance);
-      }, []);
+  const progress = cards.length > 0 ? ((currentIndex + 1) / cards.length) * 100 : 0;
 
-      const startSpeechRecognition = useCallback(() => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-          alert("瀏覽器不支援語音辨識");
-          return;
-        }
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.onstart = () => { setIsListening(true); setRecognitionResult(""); };
-        recognition.onresult = (e) => setRecognitionResult(e.results[0][0].transcript);
-        recognition.onend = () => setIsListening(false);
-        recognition.start();
-      }, []);
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center p-4 font-sans text-slate-800">
+      {/* 頂部導航與匯入 */}
+      <div className="w-full max-w-md flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-indigo-600">單字學習卡</h1>
+        <button 
+          onClick={() => fileInputRef.current.click()}
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full transition-all shadow-md"
+        >
+          <Upload size={18} />
+          <span>匯入 CSV</span>
+        </button>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileUpload} 
+          accept=".csv" 
+          className="hidden" 
+        />
+      </div>
 
-      const currentCard = reviewQueue[0];
-
-      return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4">
-          <div className="max-w-md w-full perspective-1000">
+      {cards.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-slate-300 rounded-2xl w-full max-w-md bg-white">
+          <p className="text-slate-500 mb-2">尚未匯入單字資料</p>
+          <p className="text-sm text-slate-400 text-center px-8">請點擊右上角匯入按鈕選擇您的 CSV 檔案</p>
+        </div>
+      ) : (
+        <div className="w-full max-w-md space-y-6">
+          {/* 進度條 */}
+          <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden shadow-inner">
             <div 
-              onClick={() => !isFlipped && setIsFlipped(true)} 
-              className="bg-white rounded-3xl shadow-2xl min-h-[500px] flex flex-col overflow-hidden transition-all duration-300"
-            >
-              {!isFlipped ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-8 animate-fade-in-zoom">
-                  <h2 className="text-4xl font-bold text-slate-800 mb-4">{currentCard.front}</h2>
-                  <p className="text-slate-400 text-sm italic">點擊卡片查看答案</p>
+              className="bg-indigo-500 h-full transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="text-center text-sm font-medium text-slate-500">
+            進度: {currentIndex + 1} / {cards.length}
+          </div>
+
+          {/* 卡片區域 */}
+          <div 
+            className="relative h-96 w-full perspective-1000 cursor-pointer"
+            onClick={() => setIsFlipped(!isFlipped)}
+          >
+            <div className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+              
+              {/* 正面 */}
+              <div className="absolute inset-0 backface-hidden bg-white rounded-3xl shadow-xl border border-slate-100 flex flex-col items-center justify-center p-8">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-5xl font-extrabold text-slate-900 tracking-tight">
+                    {cards[currentIndex].word}
+                  </h2>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); speak(cards[currentIndex].word); }}
+                    className="p-3 bg-indigo-50 text-indigo-500 rounded-full hover:bg-indigo-100 transition-colors"
+                  >
+                    <Volume2 size={28} />
+                  </button>
                 </div>
-              ) : (
-                <div className="flex-1 flex flex-col bg-slate-800 text-white animate-fade-in-zoom">
-                  <div className="p-6 flex-1">
-                    <img src={`https://loremflickr.com/320/200/medical`} className="w-full h-40 object-cover rounded-xl mb-6 shadow-lg" />
-                    
-                    {currentCard.backLines.map((line, i) => (
-                      <div key={i} className={`mb-4 ${line.isExample ? 'bg-slate-700/50 p-4 rounded-xl' : 'text-lg text-indigo-300 font-medium'}`}>
-                        {line.isExample ? (
-                          <div className="flex flex-col gap-3">
-                            <div className="flex items-start gap-3">
-                              <div className="flex flex-col gap-2">
-                                <button onClick={(e) => { e.stopPropagation(); speak(currentCard.exampleEng); }} className="p-2 bg-indigo-500/20 text-indigo-300 rounded-full hover:bg-indigo-500/40">
-                                  <i className="ph-fill ph-speaker-high text-xl"></i>
-                                </button>
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); startSpeechRecognition(); }} 
-                                  className={`p-2 rounded-full transition-all ${isListening ? 'bg-red-500 animate-pulse text-white' : 'bg-green-500/20 text-green-400 hover:bg-green-500/40'}`}
-                                >
-                                  <i className="ph-fill ph-microphone text-xl"></i>
-                                </button>
-                              </div>
-                              <p className="leading-relaxed">{line.text}</p>
-                            </div>
-                            {recognitionResult && (
-                              <div className="mt-2 p-3 bg-black/30 rounded-lg border border-slate-600">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">辨識結果：</p>
-                                <p className="text-green-400 italic font-medium">"{recognitionResult}"</p>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <p>{line.text}</p>
-                        )}
-                      </div>
-                    ))}
+                <p className="mt-8 text-slate-400 text-sm animate-pulse">點擊卡片翻面</p>
+              </div>
+
+              {/* 背面 */}
+              <div className="absolute inset-0 backface-hidden bg-white rounded-3xl shadow-xl border border-slate-100 p-8 rotate-y-180 overflow-y-auto">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <span className="text-indigo-600 font-bold px-2 py-1 bg-indigo-50 rounded text-sm uppercase">
+                      {cards[currentIndex].pos}
+                    </span>
+                    <h3 className="text-2xl font-bold text-slate-800">{cards[currentIndex].meaning}</h3>
                   </div>
-                  <div className="p-4 bg-slate-900 flex justify-center">
-                    <button onClick={() => setIsFlipped(false)} className="px-8 py-3 bg-slate-700 rounded-xl font-bold hover:bg-slate-600">下一題 (測試中)</button>
+                  
+                  <div>
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">詞性變化</label>
+                    <p className="text-slate-700">{cards[currentIndex].variations || '無'}</p>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">搭配詞</label>
+                    <p className="text-slate-700">{cards[currentIndex].collocations || '無'}</p>
+                  </div>
+
+                  <div className="pt-2 bg-slate-50 p-4 rounded-xl relative group">
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">例句</label>
+                    <div className="flex items-start gap-2">
+                      <p className="text-slate-800 font-medium leading-relaxed italic">
+                        "{cards[currentIndex].example}"
+                      </p>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); speak(cards[currentIndex].example); }}
+                        className="p-2 bg-white text-indigo-500 rounded-full shadow-sm hover:shadow-md transition-all flex-shrink-0"
+                      >
+                        <Volume2 size={18} />
+                      </button>
+                    </div>
+                    <p className="mt-2 text-slate-500 text-sm">
+                      {cards[currentIndex].exampleTranslation}
+                    </p>
                   </div>
                 </div>
-              )}
+              </div>
+
             </div>
           </div>
-          <p className="mt-6 text-slate-400 text-sm">這是一個針對您需求的測試頁面</p>
-        </div>
-      );
-    };
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
-</body>
-</html>
+          {/* 控制按鈕 */}
+          <div className="flex justify-between items-center px-4">
+            <button 
+              onClick={() => {
+                setCurrentIndex(prev => Math.max(0, prev - 1));
+                setIsFlipped(false);
+              }}
+              disabled={currentIndex === 0}
+              className="p-4 bg-white shadow-md rounded-2xl disabled:opacity-30 text-slate-600 hover:text-indigo-600 transition-colors"
+            >
+              <ChevronLeft size={32} />
+            </button>
+
+            <button 
+              onClick={() => {
+                setCurrentIndex(0);
+                setIsFlipped(false);
+              }}
+              className="p-3 text-slate-400 hover:text-indigo-500 transition-colors"
+              title="重新開始"
+            >
+              <RotateCcw size={24} />
+            </button>
+
+            <button 
+              onClick={() => {
+                setCurrentIndex(prev => Math.min(cards.length - 1, prev + 1));
+                setIsFlipped(false);
+              }}
+              disabled={currentIndex === cards.length - 1}
+              className="p-4 bg-white shadow-md rounded-2xl disabled:opacity-30 text-slate-600 hover:text-indigo-600 transition-colors"
+            >
+              <ChevronRight size={32} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tailwind 翻轉效果輔助樣式 */}
+      <style>{`
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+      `}</style>
+    </div>
+  );
+};
+
+export default App;
