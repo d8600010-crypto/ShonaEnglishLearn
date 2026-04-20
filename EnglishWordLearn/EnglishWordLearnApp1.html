@@ -538,6 +538,37 @@
 
   /* SVG icons */
   svg { display: block; }
+
+  /* ── Nav buttons (home / back) ── */
+  .nav-bar {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .nav-btn:hover {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--text3);
+  }
+  .nav-btn:active { transform: scale(.97); }
+  .nav-btn svg { flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -561,6 +592,18 @@
 </div>
 
 <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+<!-- Nav bar (home / back) -->
+<div class="nav-bar" id="nav-bar" style="display:none">
+  <button class="nav-btn" onclick="goHome()" title="回到首頁">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    首頁
+  </button>
+  <button class="nav-btn" id="nav-back-btn" onclick="goBack()" title="回到上一張">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    上一步
+  </button>
+</div>
 
 <!-- Empty state -->
 <div class="empty-state" id="empty-state" onclick="document.getElementById('file-input').click()">
@@ -691,6 +734,7 @@
 <script>
   let originalCards = [];
   let queue = [];
+  let history = []; // stores {card, type} for undo
   let isFlipped = false;
   let isListening = false;
   let stats = { again:0, hard:0, good:0, easy:0 };
@@ -716,12 +760,15 @@
       }
       originalCards = cards;
       queue = [...cards];
+      history = [];
       stats = { again:0, hard:0, good:0, easy:0 };
       isFinished = false;
       isFlipped = false;
       document.getElementById('empty-state').style.display = 'none';
       document.getElementById('card-scene').style.display = 'block';
       document.getElementById('finished-screen').style.display = 'none';
+      document.getElementById('nav-bar').style.display = 'flex';
+      updateNavBack();
       renderCard();
       updateHeader();
       speakText(currentCard().word);
@@ -757,6 +804,7 @@
 
     // Card back height: let front determine scene height
     document.getElementById('card-scene').style.height = '';
+    updateNavBack();
   }
 
   function updateHeader() {
@@ -766,6 +814,65 @@
     document.getElementById('stat-easy').textContent = `E:${stats.easy}`;
     const pct = originalCards.length > 0 ? (done / originalCards.length) * 100 : 0;
     document.getElementById('progress-fill').style.width = pct + '%';
+  }
+
+  function updateNavBack() {
+    const btn = document.getElementById('nav-back-btn');
+    // Back btn is enabled if: card is flipped (can un-flip) OR there's history (can undo SRS)
+    const canBack = isFlipped || history.length > 0;
+    btn.disabled = !canBack;
+    btn.style.opacity = canBack ? '1' : '0.38';
+    btn.style.cursor = canBack ? 'pointer' : 'not-allowed';
+  }
+
+  // ── Navigation ──
+  function goHome() {
+    window.speechSynthesis.cancel();
+    originalCards = [];
+    queue = [];
+    history = [];
+    stats = { again:0, hard:0, good:0, easy:0 };
+    isFinished = false;
+    isFlipped = false;
+    document.getElementById('card-scene').style.display = 'none';
+    document.getElementById('finished-screen').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'flex';
+    document.getElementById('nav-bar').style.display = 'none';
+    document.getElementById('progress-fill').style.width = '0%';
+    document.getElementById('stat-progress').textContent = '0 / 0';
+    document.getElementById('stat-again').textContent = 'A:0';
+    document.getElementById('stat-easy').textContent = 'E:0';
+    // reset file input so same file can be re-uploaded
+    document.getElementById('file-input').value = '';
+  }
+
+  function goBack() {
+    if (isFlipped) {
+      // Just flip back to front
+      isFlipped = false;
+      document.getElementById('card-inner').classList.remove('flipped');
+      document.getElementById('card-scene').style.height = '';
+      document.getElementById('card-inner').style.height = '';
+      window.speechSynthesis.cancel();
+      speakText(currentCard().word);
+      updateNavBack();
+      return;
+    }
+    if (history.length === 0) return;
+    // Undo last SRS action
+    const last = history.pop();
+    stats[last.type] = Math.max(0, stats[last.type] - 1);
+    // Remove the card from wherever it was re-inserted and put it back at front
+    const idx = queue.indexOf(last.card);
+    if (idx !== -1) queue.splice(idx, 1);
+    queue.unshift(last.card);
+    isFinished = false;
+    document.getElementById('finished-screen').style.display = 'none';
+    document.getElementById('card-scene').style.display = 'block';
+    renderCard();
+    updateHeader();
+    updateNavBack();
+    speakText(currentCard().word);
   }
 
   // ── Flip ──
@@ -788,6 +895,7 @@
       document.getElementById('card-inner').style.height = '';
       speakText(currentCard().word);
     }
+    updateNavBack();
   }
 
   // ── SRS ──
@@ -795,6 +903,7 @@
     if (queue.length === 0) return;
     const newQueue = [...queue];
     const card = newQueue.shift();
+    history.push({ card, type });
     stats[type]++;
     if (type === 'again') newQueue.splice(1, 0, card);
     else if (type === 'hard') newQueue.splice(Math.floor(newQueue.length / 2), 0, card);
@@ -806,6 +915,7 @@
       queue = newQueue;
       renderCard();
       updateHeader();
+      updateNavBack();
       speakText(currentCard().word);
     }
   }
@@ -813,6 +923,8 @@
   function showFinished() {
     document.getElementById('card-scene').style.display = 'none';
     document.getElementById('finished-screen').style.display = 'flex';
+    document.getElementById('nav-bar').style.display = 'flex';
+    updateNavBack();
     document.getElementById('f-again').textContent = stats.again;
     document.getElementById('f-hard').textContent = stats.hard;
     document.getElementById('f-good').textContent = stats.good;
