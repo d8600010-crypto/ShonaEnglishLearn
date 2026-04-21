@@ -195,7 +195,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 28px;
-    max-width: 900px;
+    max-width: 1200px;
     margin: 0 auto;
   }
 
@@ -269,6 +269,27 @@
     animation: wiggle 3s ease-in-out infinite 1s;
   }
 
+  /* Card 3 - Word Card Library */
+  .card-wordcard {
+    box-shadow: 0 8px 32px rgba(20,184,166,0.15);
+    border-color: #99F6E4;
+  }
+  .card-wordcard::before { background: linear-gradient(90deg, #0D9488, #34D399); }
+  .card-wordcard:hover { border-color: #0D9488; box-shadow: 0 20px 60px rgba(13,148,136,0.25); }
+
+  .card-wordcard .icon-wrap {
+    background: linear-gradient(135deg, #CCFBF1, #99F6E4);
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    font-size: 48px;
+    animation: wiggle 3s ease-in-out infinite 2s;
+  }
+
   @keyframes wiggle {
     0%, 100% { transform: rotate(-3deg) scale(1); }
     25% { transform: rotate(3deg) scale(1.05); }
@@ -288,6 +309,7 @@
 
   .tag-blue { background: #DBEAFE; color: #1D4ED8; }
   .tag-purple { background: #EDE9FE; color: #6D28D9; }
+  .tag-teal { background: #CCFBF1; color: #0F766E; }
 
   .card-title {
     font-family: 'Baloo 2', cursive;
@@ -299,6 +321,7 @@
 
   .card-word .card-title { color: #1D4ED8; }
   .card-speak .card-title { color: #5B21B6; }
+  .card-wordcard .card-title { color: #0F766E; }
 
   .card-desc {
     font-size: 14px;
@@ -328,6 +351,7 @@
 
   .btn-blue { background: linear-gradient(135deg, #3B82F6, #2563EB); color: white; }
   .btn-purple { background: linear-gradient(135deg, #7C3AED, #6D28D9); color: white; }
+  .btn-teal { background: linear-gradient(135deg, #0D9488, #059669); color: white; }
 
   .card-stars {
     position: absolute;
@@ -556,6 +580,21 @@
       </p>
       <span class="card-btn btn-purple">
         🎤 開始測試
+      </span>
+    </a>
+
+    <!-- Card 3: Word Card Library -->
+    <a href="WordCard/WordCardView.html" class="app-card card-wordcard">
+      <div class="card-stars">🃏✨</div>
+      <div class="icon-wrap">🗂️</div>
+      <span class="card-tag tag-teal">單字卡庫</span>
+      <h3 class="card-title">英文單字卡字庫</h3>
+      <p class="card-desc">
+        翻閱豐富的英文單字卡片收藏！<br>
+        透過精美卡片複習單字、例句與圖解，隨時隨地輕鬆溫習！
+      </p>
+      <span class="card-btn btn-teal">
+        🃏 瀏覽字庫
       </span>
     </a>
 
